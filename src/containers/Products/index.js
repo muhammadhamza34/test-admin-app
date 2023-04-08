@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Col, Container, Row, Table } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addProduct, deleteProductById } from "../../actions";
+import {
+  addProduct,
+  deleteProductById,
+  getProducts,
+  updateProductStatus,
+} from "../../actions";
 import Layout from "../../components/Layout";
 import Input from "../../components/UI/Input";
 import Modal from "../../components/UI/Modal";
@@ -36,7 +41,9 @@ export const Products = (props) => {
   const product = useSelector((state) => state.product);
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const [productStatus, setProductStatus] = useState();
+  const [productStatus, setProductStatus] = useState(product.productStatus);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [productStatusError, setProductStatusError] = useState(null);
 
   const handleClose = () => {
     const form = new FormData();
@@ -69,6 +76,37 @@ export const Products = (props) => {
   const handleProductPicture = (e) => {
     setProductPictures([...productPictures, e.target.files[0]]);
   };
+
+  // const handleProductStatusChange = (newStatus, productId) => {
+  //   dispatch(updateProductStatus(productId, newStatus))
+  //     .then((result) => {
+  //       setProductStatus(newStatus);
+  //       console.log(newStatus);
+  //       console.log(productId);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // };
+
+  const handleProductStatusChange = async (status, productId) => {
+    try {
+      setIsUpdating(true);
+      setProductStatusError(null);
+      dispatch(updateProductStatus(productId, status));
+      console.log(productId);
+      console.log(status);
+    } catch (error) {
+      setProductStatusError(error.response?.data?.message || error.message);
+      console.error(error);
+      if (error.response?.status === 404) {
+        console.log("Product not found");
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const renderProducts = () => {
     return (
       <Table style={{ fontSize: 12 }} responsive="sm">
@@ -79,6 +117,7 @@ export const Products = (props) => {
             <th>Price</th>
             <th>Quantity</th>
             <th>Category</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -93,13 +132,39 @@ export const Products = (props) => {
                       <td>{product.price}</td>
                       <td>{product.quantity}</td>
                       <td>{product.category.name}</td>
-                      {/* <td>{product.createdBy}</td> */}
+                      <td>{product.productStatus}</td>
+
                       <td>
                         <button
-                          onClick={() => showProductDetailsModal(product)}
+                          // onClick={() =>
+                          //   handleProductStatusChange("active", product._id)
+                          // }
+                          onClick={() =>
+                            handleProductStatusChange("active", product._id)
+                          }
+                          // disabled={isUpdating}
                         >
                           <FontAwesomeIcon icon={faToggleOn} />
                           Active
+                        </button>
+                        <button
+                          className="mx-1"
+                          // onClick={() =>
+                          //   handleProductStatusChange("inactive", product._id)
+                          // }
+                          onClick={() =>
+                            handleProductStatusChange("inactive", product._id)
+                          }
+                          // disabled={isUpdating}
+                        >
+                          <FontAwesomeIcon icon={faToggleOff} />
+                          InActive
+                        </button>
+                        <button
+                          onClick={() => showProductDetailsModal(product)}
+                        >
+                          <FontAwesomeIcon icon={faCircleInfo} />
+                          INFO
                         </button>
                         <button
                           className="mx-1"
@@ -110,15 +175,15 @@ export const Products = (props) => {
                             dispatch(deleteProductById(payload));
                           }}
                         >
-                          <FontAwesomeIcon icon={faToggleOff} />
-                          InActive
+                          <FontAwesomeIcon icon={faTrashAlt} />
+                          DELETE
                         </button>
                       </td>
                     </tr>
                   );
                 } else {
                   console.log(product.createdBy);
-                  // if (product.createdBy == auth.user._id) {
+                  // if (product.productStatus[1] === "active") {
                   return (
                     <tr key={product._id}>
                       <td>{index + 1}</td>
@@ -126,8 +191,7 @@ export const Products = (props) => {
                       <td>{product.price}</td>
                       <td>{product.quantity}</td>
                       <td>{product.category.name}</td>
-                      <td>{product.createdBy}</td>
-
+                      <td>{product.productStatus}</td>
                       <td>
                         <button
                           onClick={() => showProductDetailsModal(product)}

@@ -6,29 +6,35 @@ import { Signin } from "./containers/Signin";
 import { Signup } from "./containers/Signup";
 import PrivateRoute from "./components/HOC/PrivateRoute";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllCategory, isUserLoggedIn ,getInitialData} from "./actions";
+import {
+  getAllCategory,
+  isUserLoggedIn,
+  getInitialData,
+  getProducts,
+  getCustomerOrders
+} from "./actions";
 import { Orders } from "./containers/Orders";
 import { Products } from "./containers/Products";
 import { Category } from "./containers/Category";
 import { NewPage } from "./containers/NewPage";
 
 function App() {
-
-    
   const dispatch = useDispatch();
-  const auth = useSelector(state => state.auth)
-
+  const auth = useSelector((state) => state.auth);
 
   //componentDidMount or componentDidUpdate
   useEffect(() => {
     if (!auth.authenticate) {
       dispatch(isUserLoggedIn());
     }
-    if(auth.authenticate){
-      dispatch(getInitialData());
+    if (auth.authenticate) {
+      let superAdmin = auth.user.email == "muhammadhamza11@gmail.com" ? true : false;
+      dispatch(getInitialData(superAdmin));
+      if (!superAdmin) {
+        dispatch(getProducts())
+        dispatch(getCustomerOrders())
+      }
     }
-    
-
   }, [auth.authenticate]);
 
   return (
@@ -44,13 +50,13 @@ function App() {
           <Route path="/page" element={<NewPage />}></Route>
         </Route>
         <Route path="/category" element={<PrivateRoute />}>
-          <Route path="/category" element={<Category/>}></Route>
+          <Route path="/category" element={<Category />}></Route>
         </Route>
         <Route path="/products" element={<PrivateRoute />}>
-          <Route path="/products" element={<Products/>}></Route>
+          <Route path="/products" element={<Products />}></Route>
         </Route>
         <Route path="/orders" element={<PrivateRoute />}>
-          <Route path="/orders" element={<Orders/>}></Route>
+          <Route path="/orders" element={<Orders />}></Route>
         </Route>
 
         <Route path="/signin" element={<Signin />} />
@@ -59,6 +65,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;

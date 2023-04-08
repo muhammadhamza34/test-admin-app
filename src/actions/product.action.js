@@ -1,13 +1,14 @@
 import axios from "../helpers/axios";
 import { productConstants } from "./constants";
 
-const getProducts = () => {
+export const getProducts = () => {
   return async (dispatch) => {
     try {
       dispatch({ type: productConstants.GET_ALL_PRODUCTS_REQUEST });
       const res = await axios.post(`product/getProducts`);
       if (res.status === 200) {
         const { products } = res.data;
+        // console.log(products,"getProducts")
         dispatch({
           type: productConstants.GET_ALL_PRODUCTS_SUCCESS,
           payload: { products },
@@ -20,9 +21,6 @@ const getProducts = () => {
     }
   };
 };
-
-
-
 
 export const addProduct = (form) => {
   return async (dispatch) => {
@@ -65,3 +63,27 @@ export const deleteProductById = (payload) => {
     }
   };
 };
+
+export const updateProductStatus =
+  (productId, productStatus) => async (dispatch) => {
+    try {
+      dispatch({ type: productConstants.PRODUCT_STATUS_UPDATE_REQUEST });
+
+      const { data } = await axios.put(`product/${productId}/updateProductStatus`, {
+        productStatus,
+      });
+
+      dispatch({
+        type: productConstants.PRODUCT_STATUS_UPDATE_SUCCESS,
+        payload: data,
+      });
+    } catch (error) {
+      dispatch({
+        type: productConstants.PRODUCT_STATUS_UPDATE_FAIL,
+        error:
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : error.message,
+      });
+    }
+  };
